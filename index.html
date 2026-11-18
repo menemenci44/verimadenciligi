@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>İşbirlikçi Filtreleme Çalışma Sitesi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6f3ec; --paper:#fffdf8; --ink:#1f2328; --muted:#5d6470; --line:#e4ddd0;
+  --accent:#1d5c63; --accent-soft:#e3efee; --warm:#b5562c; --warm-soft:#f8e9e0;
+  --ok:#2e7d4f; --ok-soft:#e4f3ea; --bad:#b3261e; --bad-soft:#fbe7e5;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:16px;line-height:1.55}
+a{color:var(--accent)}
+.layout{display:grid;grid-template-columns:290px 1fr;min-height:100vh}
+aside{background:#1b2a2f;color:#e9efe9;padding:26px 18px;position:sticky;top:0;height:100vh;overflow:auto}
+aside h1{font-family:'Fraunces',serif;font-size:22px;line-height:1.2;margin:0 0 4px;font-weight:700}
+aside .sub{font-size:13px;color:#9fb3b0;margin-bottom:22px}
+nav button{all:unset;display:flex;align-items:center;gap:10px;width:100%;padding:10px 10px;border-radius:9px;cursor:pointer;font-size:14.5px;color:#d7e2de;box-sizing:border-box}
+nav button:hover{background:#26393f}
+nav button.active{background:#e3efee;color:#1b2a2f;font-weight:600}
+nav .num{font-family:var(--mono);font-size:12px;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#2f454b;flex:none}
+nav button.active .num{background:var(--accent);color:#fff}
+nav .prog{margin-left:auto;font-family:var(--mono);font-size:11.5px;color:#9fb3b0}
+nav button.active .prog{color:var(--accent)}
+nav .home{margin-bottom:8px}
+.total{margin-top:22px;padding:14px;border:1px solid #33494f;border-radius:10px;font-size:13px;color:#b8c9c5}
+.total b{font-family:var(--mono);color:#fff;font-size:18px}
+.bar{height:6px;background:#33494f;border-radius:4px;margin-top:8px;overflow:hidden}
+.bar i{display:block;height:100%;background:#7cc4b8;width:0;transition:width .3s}
+main{padding:38px clamp(18px,4vw,56px) 80px;max-width:1000px}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--warm)}
+h2.title{font-family:'Fraunces',serif;font-size:clamp(30px,4vw,42px);line-height:1.1;margin:6px 0 10px}
+.lead{font-size:18px;color:var(--muted);max-width:720px;margin:0 0 26px}
+section.block{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:0 0 22px}
+section.block h3{margin:0 0 12px;font-size:18px;display:flex;align-items:center;gap:8px}
+section.block h3 .tag{font-family:var(--mono);font-size:11px;background:var(--accent-soft);color:var(--accent);padding:2px 8px;border-radius:20px;font-weight:500}
+.formula{font-family:var(--mono);font-size:17px;background:#1b2a2f;color:#f2f6f4;padding:16px 18px;border-radius:10px;overflow-x:auto;margin:6px 0 10px}
+.formula small{display:block;color:#9fb3b0;font-size:12.5px;margin-top:6px;font-family:'IBM Plex Sans',sans-serif}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.when{border-left:4px solid var(--accent);padding:4px 0 4px 14px}
+.when.no{border-color:var(--warm)}
+.when h4{margin:0 0 6px;font-size:14px;text-transform:uppercase;letter-spacing:.05em;color:var(--accent)}
+.when.no h4{color:var(--warm)}
+.when ul{margin:0;padding-left:18px}
+.when li{margin:3px 0}
+.qtypes{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.qtypes span{background:var(--warm-soft);color:#7a3a1c;font-size:13.5px;padding:5px 10px;border-radius:8px}
+details.ex{border:1px solid var(--line);border-radius:11px;margin:10px 0;background:#fff;overflow:hidden}
+details.ex summary{cursor:pointer;padding:13px 16px;font-weight:600;list-style:none;display:flex;gap:10px;align-items:center}
+details.ex summary::-webkit-details-marker{display:none}
+details.ex summary .k{font-family:var(--mono);font-size:11.5px;color:#fff;background:var(--warm);border-radius:6px;padding:2px 7px;font-weight:500}
+details.ex summary::after{content:'+';margin-left:auto;font-family:var(--mono);color:var(--muted);font-size:18px}
+details.ex[open] summary::after{content:'−'}
+details.ex .body{padding:0 18px 16px}
+.src{font-size:12px;color:var(--muted);font-family:var(--mono)}
+table.t{border-collapse:collapse;margin:10px 0;font-size:14.5px;width:auto;min-width:50%}
+table.t th,table.t td{border-bottom:1px solid var(--line);padding:6px 12px;text-align:left}
+table.t th{background:#f3efe6;font-weight:600}
+table.t td.n,table.t th.n{text-align:right;font-family:var(--mono)}
+table.t tr.hl td{background:var(--ok-soft);font-weight:600}
+.step{font-family:var(--mono);font-size:14.5px;background:#f7f4ee;border-radius:8px;padding:10px 14px;margin:8px 0;white-space:pre-wrap;overflow-x:auto}
+.note{background:var(--warm-soft);border-radius:9px;padding:10px 14px;font-size:14.5px;margin:10px 0}
+.note.ok{background:var(--accent-soft)}
+pre.code{font-family:var(--mono);font-size:13.5px;background:#1b2a2f;color:#e9efe9;padding:14px 16px;border-radius:10px;overflow-x:auto;line-height:1.5}
+pre.code .c{color:#8fb3a9}
+/* calculator */
+.calc label{font-size:13px;font-weight:600;color:var(--muted);display:block;margin-bottom:4px}
+.calc input[type=text],.calc input[type=number]{width:100%;font-family:var(--mono);font-size:15px;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:#fff}
+.calc .row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px}
+.calc .row3{display:grid;grid-template-columns:1fr 1fr 120px;gap:12px;margin-bottom:10px}
+.btn{all:unset;cursor:pointer;background:var(--accent);color:#fff;font-weight:600;font-size:14.5px;padding:9px 16px;border-radius:9px}
+.btn:hover{filter:brightness(1.1)}
+.btn.ghost{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+.btn:focus-visible,nav button:focus-visible{outline:3px solid #7cc4b8;outline-offset:2px}
+.out{margin-top:12px}
+.pill{display:inline-block;font-family:var(--mono);background:var(--accent);color:#fff;padding:4px 10px;border-radius:7px;font-size:15px}
+select{font-family:inherit;font-size:15px;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:#fff}
+/* quiz */
+.q{border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:12px 0;background:#fff}
+.q .qh{display:flex;gap:10px;align-items:flex-start}
+.q .qn{font-family:var(--mono);font-size:12px;background:#1b2a2f;color:#fff;border-radius:6px;padding:2px 8px;flex:none;margin-top:3px}
+.q .qt{font-weight:500}
+.opts{display:grid;gap:8px;margin-top:12px}
+.opt{all:unset;cursor:pointer;border:1px solid var(--line);border-radius:9px;padding:9px 12px;font-size:15px;background:#fbfaf6}
+.opt:hover{border-color:var(--accent)}
+.opt.right{background:var(--ok-soft);border-color:var(--ok);color:#174d2f;font-weight:600}
+.opt.wrong{background:var(--bad-soft);border-color:var(--bad);color:#7d1a14}
+.opt[disabled]{cursor:default}
+.numrow{display:flex;gap:10px;margin-top:12px;align-items:center;flex-wrap:wrap}
+.numrow input{font-family:var(--mono);font-size:15px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;width:160px}
+.fb{margin-top:10px;font-size:14.5px;padding:10px 12px;border-radius:9px;display:none}
+.fb.show{display:block}
+.fb.ok{background:var(--ok-soft)}
+.fb.no{background:var(--bad-soft)}
+.fb b{display:block;margin-bottom:2px}
+.qbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;flex-wrap:wrap;gap:8px}
+.score{font-family:var(--mono);font-size:14px;color:var(--muted)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px}
+.card{all:unset;cursor:pointer;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:6px;box-sizing:border-box}
+.card:hover{border-color:var(--accent);transform:translateY(-1px)}
+.card .cn{font-family:var(--mono);font-size:12px;color:var(--warm)}
+.card .ct{font-family:'Fraunces',serif;font-size:21px;font-weight:700}
+.card .cd{font-size:14px;color:var(--muted)}
+.card .cm{font-family:var(--mono);font-size:12px;color:var(--accent);margin-top:auto}
+.navfoot{display:flex;justify-content:space-between;margin-top:30px;gap:10px}
+.menu-toggle{display:none}
+@media (max-width:860px){
+  .layout{grid-template-columns:1fr}
+  aside{position:static;height:auto}
+  nav{display:none}
+  nav.open{display:block}
+  .menu-toggle{display:inline-block;margin-bottom:8px}
+  .grid2,.calc .row,.calc .row3{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside>
+  <h1>İşbirlikçi Filtreleme</h1>
+  <div class="sub">Veri Madenciliği · Bölüm 2 çalışma sitesi</div>
+  <button class="btn ghost menu-toggle" onclick="document.querySelector('nav').classList.toggle('open')" style="color:#e3efee;border-color:#e3efee">Kategoriler</button>
+  <nav id="nav"></nav>
+  <div class="total">Toplam ilerleme<br><b id="totalScore">0 / 0</b> doğru<div class="bar"><i id="totalBar"></i></div>
+    <div style="margin-top:10px"><button class="btn ghost" style="color:#e3efee;border-color:#55706f;font-size:12.5px;padding:5px 10px" onclick="resetAll()">Cevapları sıfırla</button></div>
+  </div>
+</aside>
+<main id="main"></main>
+</div>
+
+<script>
+/* ---------- veri seti (PDF) ---------- */
+const USERS = {
+ "Angelica":{"Blues Traveler":3.5,"Broken Bells":2.0,"Norah Jones":4.5,"Phoenix":5.0,"Slightly Stoopid":1.5,"The Strokes":2.5,"Vampire Weekend":2.0},
+ "Bill":{"Blues Traveler":2.0,"Broken Bells":3.5,"Deadmau5":4.0,"Phoenix":2.0,"Slightly Stoopid":3.5,"Vampire Weekend":3.0},
+ "Chan":{"Blues Traveler":5.0,"Broken Bells":1.0,"Deadmau5":1.0,"Norah Jones":3.0,"Phoenix":5,"Slightly Stoopid":1.0},
+ "Dan":{"Blues Traveler":3.0,"Broken Bells":4.0,"Deadmau5":4.5,"Phoenix":3.0,"Slightly Stoopid":4.5,"The Strokes":4.0,"Vampire Weekend":2.0},
+ "Hailey":{"Broken Bells":4.0,"Deadmau5":1.0,"Norah Jones":4.0,"The Strokes":4.0,"Vampire Weekend":1.0},
+ "Jordyn":{"Broken Bells":4.5,"Deadmau5":4.0,"Norah Jones":5.0,"Phoenix":5.0,"Slightly Stoopid":4.5,"The Strokes":4.0,"Vampire Weekend":4.0},
+ "Sam":{"Blues Traveler":5.0,"Broken Bells":2.0,"Norah Jones":3.0,"Phoenix":5.0,"Slightly Stoopid":4.0,"The Strokes":5.0},
+ "Veronica":{"Blues Traveler":3.0,"Norah Jones":5.0,"Phoenix":4.0,"Slightly Stoopid":2.5,"The Strokes":3.0}
+};
+const BANDS=["Blues Traveler","Broken Bells","Deadmau5","Norah Jones","Phoenix","Slightly Stoopid","The Strokes","Vampire Weekend"];
+const NAMES=Object.keys(USERS);
+
+/* ---------- metrikler ---------- */
+function minkowski(a,b,r){let d=0,c=false;for(const k in a){if(k in b){d+=Math.pow(Math.abs(a[k]-b[k]),r);c=true}}return c?Math.pow(d,1/r):0}
+function manhattan(a,b){return minkowski(a,b,1)}
+function pearson(a,b){let sxy=0,sx=0,sy=0,sx2=0,sy2=0,n=0;for(const k in a){if(k in b){n++;const x=a[k],y=b[k];sxy+=x*y;sx+=x;sy+=y;sx2+=x*x;sy2+=y*y}}
+ if(!n)return 0;const den=Math.sqrt(sx2-sx*sx/n)*Math.sqrt(sy2-sy*sy/n);return den===0?0:(sxy-sx*sy/n)/den}
+function cosine(a,b){let dot=0,na=0,nb=0;for(const k of BANDS){const x=a[k]||0,y=b[k]||0;dot+=x*y;na+=x*x;nb+=y*y}return (na&&nb)?dot/Math.sqrt(na*nb):0}
+const f=(x,d=3)=>{if(!isFinite(x))return '—';const s=(Math.round(x*Math.pow(10,d))/Math.pow(10,d)).toString();return s.replace('.',',')};
+
+function ratingTable(names){
+  let h='<table class="t"><tr><th></th>'+names.map(n=>`<th class="n">${n}</th>`).join('')+'</tr>';
+  for(const b of BANDS){h+=`<tr><td>${b}</td>`+names.map(n=>`<td class="n">${USERS[n][b]!==undefined?f(USERS[n][b],1):'–'}</td>`).join('')+'</tr>'}
+  return h+'</table>';
+}
+
+/* ---------- içerik ---------- */
+const CATS=[
+{
+ id:'manhattan', title:'Manhattan uzaklığı', short:'Mutlak farkların toplamı. En hızlı, en basit uzaklık.',
+ lead:'İki kişinin her öğedeki puan farkının mutlak değerleri toplanır. Adını, ızgara şeklindeki sokaklarda yalnızca yatay ve dikey gidilen taksi yolundan alır (cab driver distance).',
+ formula:'d(x, y) = |x₁ − x₂| + |y₁ − y₂|      (2 boyut)<br>d(x, y) = Σ |xₖ − yₖ|              (n boyut)<small>Yalnızca iki kişinin de puanladığı öğeler toplanır. Küçük d = daha benzer.</small>',
+ when:['Veri yoğun (herkes hemen her şeyi puanlamış)','Hız önemli: 1 milyon kullanıcı içinden en benzer kişiyi bulmak','Puanlar aynı ölçekte (ör. 1–5 yıldız)','Tek bir büyük farkın sonucu şişirmesi istenmiyor'],
+ whenNot:['Veri seyrek (çoğu hücre boş)','Kullanıcılar ölçeği farklı kullanıyor (puan enflasyonu)','Ortak öğe sayısı kişiden kişiye çok değişiyor'],
+ qtypes:['“X ile Y arasındaki Manhattan uzaklığını hesaplayın”','“Ms. X’e en yakın kişi kim?”','“manhattan() fonksiyonu ne döndürür?”','“En yakın komşu listesini sıralayın”'],
+ calc:'pair', calcDefault:['5, 5','4, 2'], calcMetric:'manhattan',
+ examples:[
+  {t:'Ms. X’e en yakın okuyucu (2 boyut)', src:'PDF s. 2-3', b:`Ms. X: Snow Crash 4, Dragon Tattoo 2.
+  <table class="t"><tr><th>Kişi</th><th class="n">Snow Crash</th><th class="n">Dragon Tattoo</th><th>Hesap</th><th class="n">d</th></tr>
+  <tr class="hl"><td>Amy</td><td class="n">5</td><td class="n">5</td><td>|5−4| + |5−2|</td><td class="n">4</td></tr>
+  <tr><td>Bill</td><td class="n">2</td><td class="n">5</td><td>|2−4| + |5−2|</td><td class="n">5</td></tr>
+  <tr><td>Jim</td><td class="n">1</td><td class="n">4</td><td>|1−4| + |4−2|</td><td class="n">5</td></tr></table>
+  En yakın Amy. Amy <i>The Windup Girl</i>’e 5 vermiş, bu kitap Ms. X’e önerilir.`},
+  {t:'Angelica ile Bill (n boyut)', src:'PDF s. 2-7', b:`Sadece ikisinin de puanladığı 5 grup kullanılır.
+  <table class="t"><tr><th>Grup</th><th class="n">Angelica</th><th class="n">Bill</th><th class="n">|fark|</th></tr>
+  <tr><td>Blues Traveler</td><td class="n">3,5</td><td class="n">2</td><td class="n">1,5</td></tr>
+  <tr><td>Broken Bells</td><td class="n">2</td><td class="n">3,5</td><td class="n">1,5</td></tr>
+  <tr><td>Deadmau5</td><td class="n">–</td><td class="n">4</td><td class="n"></td></tr>
+  <tr><td>Norah Jones</td><td class="n">4,5</td><td class="n">–</td><td class="n"></td></tr>
+  <tr><td>Phoenix</td><td class="n">5</td><td class="n">2</td><td class="n">3</td></tr>
+  <tr><td>Slightly Stoopid</td><td class="n">1,5</td><td class="n">3,5</td><td class="n">2</td></tr>
+  <tr><td>The Strokes</td><td class="n">2,5</td><td class="n">–</td><td class="n"></td></tr>
+  <tr><td>Vampire Weekend</td><td class="n">2</td><td class="n">3</td><td class="n">1</td></tr>
+  <tr class="hl"><td>Toplam</td><td></td><td></td><td class="n">9</td></tr></table>`},
+  {t:'Hailey’nin uzaklıkları (Python çıktısı)', src:'PDF s. 2-15', b:`<div class="step">&gt;&gt;&gt; manhattan(users['Hailey'], users['Veronica'])
+2.0
+&gt;&gt;&gt; manhattan(users['Hailey'], users['Jordyn'])
+7.5</div>Veronica ile sadece 2 ortak grup var (Norah Jones, The Strokes): |4−5| + |4−3| = 2. Jordyn ile 5 ortak grup var: 0,5 + 3 + 1 + 0 + 3 = 7,5.`},
+  {t:'Yeni örnek: üç arkadaş', src:'Alıştırma', b:`Zeynep iki filme (4, 2) puan vermiş.
+  <div class="step">Ali    (3, 5) → |3−4| + |5−2| = 1 + 3 = 4
+Ayşe   (4, 1) → |4−4| + |1−2| = 0 + 1 = 1   ← en yakın
+Mehmet (1, 4) → |1−4| + |4−2| = 3 + 2 = 5</div>`},
+  {t:'Yeni örnek: 3 boyut', src:'Alıştırma', b:`A = (5, 3, 1), B = (2, 4, 1)
+  <div class="step">d = |5−2| + |3−4| + |1−1| = 3 + 1 + 0 = 4</div>Boyut sayısı arttıkça aynı mantık devam eder, yalnızca daha çok terim toplanır.`},
+  {t:'Python kodu', src:'PDF s. 2-15', b:`<pre class="code">def manhattan(rating1, rating2):
+    distance = 0
+    for key in rating1:
+        if key in rating2:          <span class="c"># sadece ortak öğeler</span>
+            distance += abs(rating1[key] - rating2[key])
+    return distance</pre>`}
+ ],
+ questions:[
+  {type:'num', q:'P = (3, 4, 2) ve Q = (1, 4, 5) arasındaki Manhattan uzaklığı kaçtır?', ans:5, tol:0.01, exp:'|3−1| + |4−4| + |2−5| = 2 + 0 + 3 = 5.'},
+  {type:'num', q:'Angelica ile Veronica arasındaki Manhattan uzaklığı kaçtır? (Veri tablosundan)', ans:3.5, tol:0.01, exp:'Ortak 5 grup: Blues Traveler 0,5 + Norah Jones 0,5 + Phoenix 1 + Slightly Stoopid 1 + The Strokes 0,5 = 3,5.'},
+  {type:'num', q:'Jim (1, 4) ile Ms. X (4, 2) arasındaki Manhattan uzaklığı kaçtır?', ans:5, tol:0.01, exp:'|1−4| + |4−2| = 3 + 2 = 5.'},
+  {type:'mcq', q:'Manhattan uzaklığının en büyük avantajı kitapta nasıl anlatılır?', opts:['Seyrek veride en iyi sonucu verir','Hesaplaması hızlıdır','Puan enflasyonunu düzeltir','Negatif değer alabilir'], ans:1, exp:'Kitap Facebook örneğini verir: 1 milyon kullanıcı arasında en benzer kişiyi ararken hız önemlidir.'},
+  {type:'mcq', q:'manhattan() fonksiyonunda “if key in rating2” satırı ne işe yarar?', opts:['Uzaklığın karesini alır','Sadece iki kişinin de puanladığı öğeleri hesaba katar','Sonucu sıralar','Boş değerlere 0 atar'], ans:1, exp:'Biri puanlamadıysa o öğe karşılaştırılamaz, bu yüzden atlanır.'},
+  {type:'num', q:'Chan ile Hailey arasındaki Manhattan uzaklığı kaçtır?', ans:4, tol:0.01, exp:'Ortak gruplar: Broken Bells |1−4| = 3, Deadmau5 |1−1| = 0, Norah Jones |3−4| = 1 → 4.'},
+  {type:'mcq', q:'Manhattan’da uzaklık 0 çıkarsa bu ne anlama gelir?', opts:['Hiç benzer değiller','Ortak öğelerde puanları birebir aynı (ya da hiç ortak öğe yok)','Hesap hatası var','Pearson da 0’dır'], ans:1, exp:'Tüm farklar 0 ise toplam 0 olur. Kitaptaki minkowski() ortak öğe yoksa da 0 döndürür, buna dikkat etmek gerekir.'}
+ ]
+},
+{
+ id:'oklid', title:'Öklid uzaklığı', short:'Kuş uçuşu mesafe. Büyük farkları daha çok cezalandırır.',
+ lead:'İki nokta arasındaki düz çizgi (kuş uçuşu) mesafedir; Pisagor teoreminin (c = √(a² + b²)) çok boyutlu halidir.',
+ formula:'d(x, y) = √( (x₁ − x₂)² + (y₁ − y₂)² )     (2 boyut)<br>d(x, y) = √( Σ (xₖ − yₖ)² )              (n boyut)<small>Farkların karesi alındığı için tek bir büyük fark sonuca çok etki eder.</small>',
+ when:['Veri yoğun ve değerlerin büyüklüğü önemli','Keskin anlaşmazlıkların daha önemli sayılması isteniyor','Geometrik / sürekli ölçümler (koordinat, boy, kilo)'],
+ whenNot:['Eksik değer çok (seyrek veri)','Ortak öğe sayıları farklı: Hailey–Veronica 2 boyut, Hailey–Jordyn 5 boyut','Puan enflasyonu var'],
+ qtypes:['“Hailey ile Veronica arasındaki Öklid uzaklığını hesaplayın”','“Manhattan ve Öklid aynı kişiyi mi en yakın buluyor?”','“Bu ölçülerin kusuru (flaw) nedir?”'],
+ calc:'pair', calcDefault:['5, 5','4, 2'], calcMetric:'euclid',
+ examples:[
+  {t:'Ms. X örneği, Öklid ile', src:'PDF s. 2-5', b:`<div class="step">Amy  : √((5−4)² + (5−2)²) = √(1 + 9)  = √10 ≈ 3,16  ← en yakın
+Bill : √((2−4)² + (5−2)²) = √(4 + 9)  = √13 ≈ 3,61
+Jim  : √((1−4)² + (4−2)²) = √(9 + 4)  = √13 ≈ 3,61</div>Sonuç Manhattan ile aynı: en yakın Amy.`},
+  {t:'Angelica ile Bill', src:'PDF s. 2-8', b:`<div class="step">= √(1,5² + (−1,5)² + 3² + (−2)² + (−1)²)
+= √(2,25 + 2,25 + 9 + 4 + 1)
+= √18,5 ≈ 4,3</div>Phoenix’teki 3 puanlık fark (karesi 9) toplamın yarısından fazlası. Manhattan’da bu oran 9’da 3’tü.`},
+  {t:'Sharpen your pencil: Hailey ile Veronica ve Jordyn', src:'PDF s. 2-10', b:`<div class="step">Hailey–Veronica = √((4−5)² + (4−3)²) = √2 ≈ 1,414
+Hailey–Jordyn   = √(0,5² + 3² + 1² + 0² + 3²) = √19,25 ≈ 4,387</div>
+  <div class="note"><b>Kusur (flaw):</b> Hailey–Veronica uzaklığı 2 boyutlu, Hailey–Jordyn uzaklığı 5 boyutlu. Ortak öğe sayısı farklı olunca karşılaştırma çarpılır. Manhattan ve Öklid <b>eksik değer olmadığında</b> en iyi çalışır.</div>`},
+  {t:'Yeni örnek: 3 boyut', src:'Alıştırma', b:`A = (1, 2, 3), B = (4, 6, 3)<div class="step">d = √(3² + 4² + 0²) = √25 = 5</div>`},
+  {t:'Manhattan ile farkı: aynı toplam, farklı sonuç', src:'Alıştırma', b:`İki çift düşünelim. Çift 1’in farkları (3, 0, 0), Çift 2’nin farkları (1, 1, 1).
+  <table class="t"><tr><th></th><th class="n">Manhattan</th><th class="n">Öklid</th></tr>
+  <tr><td>Çift 1: (3, 0, 0)</td><td class="n">3</td><td class="n">3</td></tr>
+  <tr><td>Çift 2: (1, 1, 1)</td><td class="n">3</td><td class="n">1,73</td></tr></table>
+  Manhattan ikisini eşit görür. Öklid ise tek bir büyük anlaşmazlığı daha “uzak” sayar.`}
+ ],
+ questions:[
+  {type:'num', q:'(2, 3) ile (5, 7) arasındaki Öklid uzaklığı kaçtır?', ans:5, tol:0.01, exp:'√(3² + 4²) = √25 = 5.'},
+  {type:'num', q:'(0, 0, 0) ile (1, 2, 2) arasındaki Öklid uzaklığı kaçtır?', ans:3, tol:0.01, exp:'√(1 + 4 + 4) = √9 = 3.'},
+  {type:'num', q:'Angelica ile Veronica arasındaki Öklid uzaklığı yaklaşık kaçtır? (2 ondalık)', ans:1.66, tol:0.02, exp:'Farklar 0,5; 0,5; 1; 1; 0,5 → kareler 0,25 + 0,25 + 1 + 1 + 0,25 = 2,75 → √2,75 ≈ 1,66.'},
+  {type:'mcq', q:'Hailey–Jordyn uzaklığını hesaplarken hangi grupların farkı en çok katkı yapar?', opts:['Broken Bells ve The Strokes','Deadmau5 ve Vampire Weekend','Norah Jones ve Phoenix','Blues Traveler'], ans:1, exp:'İkisinde de fark 3 (1’e karşı 4). Karesi 9 + 9 = 18; toplam 19,25’in büyük kısmı.'},
+  {type:'mcq', q:'Kitaba göre Manhattan ve Öklid en iyi ne zaman çalışır?', opts:['Eksik değer olmadığında','Veri çok seyrek olduğunda','Kullanıcılar farklı ölçek kullandığında','Sadece 2 boyutta'], ans:0, exp:'“Manhattan Distance and Euclidean Distance work best when there are no missing values.”'},
+  {type:'mcq', q:'Öklid, Manhattan’a göre hangi durumda daha büyük bir “ceza” verir?', opts:['Birçok küçük farkta','Tek bir büyük farkta','Farklar sıfır olduğunda','Hiçbir zaman'], ans:1, exp:'Kare alma, büyük farkı orantısız büyütür (3² = 9, ama 1² + 1² + 1² = 3).'}
+ ]
+},
+{
+ id:'minkowski', title:'Minkowski uzaklığı', short:'Manhattan ve Öklid’i tek formülde toplar; r parametresi.',
+ lead:'Minkowski, uzaklık ölçülerinin genelleştirilmiş halidir. r değerini değiştirerek Manhattan, Öklid ya da Supremum (en büyük fark) elde edilir.',
+ formula:'d(x, y) = ( Σ |xₖ − yₖ|ʳ )^(1/r)<small>r = 1 → Manhattan · r = 2 → Öklid · r = ∞ → Supremum (en büyük tek fark). r büyüdükçe tek bir boyuttaki büyük fark toplam farkı daha çok etkiler.</small>',
+ when:['Hangi uzaklığın veriye uyduğunu deneysel olarak karşılaştırmak','Tek fonksiyonla farklı uzaklıkları kodlamak (computeNearestNeighbor içinde)','“En az bir konuda tamamen anlaşamıyorlar mı?” sorusu için r = ∞'],
+ whenNot:['Puan enflasyonu ya da seyreklik varsa r ne olursa olsun sorun devam eder'],
+ qtypes:['“r = 1, 2, ∞ için sonucu hesaplayın”','“Minkowski fonksiyonunu yazın”','“r büyüdükçe ne olur?”','“computeNearestNeighbor’ı Minkowski ile değiştirin”'],
+ calc:'pair', calcDefault:['3.5, 2, 5, 1.5, 2','2, 3.5, 2, 3.5, 3'], calcMetric:'minkowski',
+ examples:[
+  {t:'Angelica ile Bill: üç r değeri', src:'PDF s. 2-11, 2-12', b:`Ortak farklar: 1,5; 1,5; 3; 2; 1
+  <table class="t"><tr><th>r</th><th>Ad</th><th>Hesap</th><th class="n">Sonuç</th></tr>
+  <tr><td>1</td><td>Manhattan</td><td>1,5 + 1,5 + 3 + 2 + 1</td><td class="n">9</td></tr>
+  <tr><td>2</td><td>Öklid</td><td>√(2,25 + 2,25 + 9 + 4 + 1)</td><td class="n">4,30</td></tr>
+  <tr><td>∞</td><td>Supremum</td><td>max(1,5; 1,5; 3; 2; 1)</td><td class="n">3</td></tr></table>`},
+  {t:'Yeni örnek: r arttıkça büyük fark baskın çıkar', src:'Alıştırma', b:`Farklar: 1, 2, 4
+  <div class="step">r = 1 → 1 + 2 + 4                 = 7
+r = 2 → (1 + 4 + 16)^(1/2)       = √21 ≈ 4,58
+r = 3 → (1 + 8 + 64)^(1/3)       = 73^(1/3) ≈ 4,18
+r = ∞ → max                      = 4</div>
+  r arttıkça sonuç, en büyük fark olan 4’e yaklaşır. Toplamdaki payı da büyür.`},
+  {t:'Exercise çözümü: minkowski() fonksiyonu', src:'PDF s. 2-19', b:`<pre class="code">def minkowski(rating1, rating2, r):
+    distance = 0
+    commonRatings = False
+    for key in rating1:
+        if key in rating2:
+            distance += pow(abs(rating1[key] - rating2[key]), r)
+            commonRatings = True
+    if commonRatings:
+        return pow(distance, 1/r)
+    else:
+        return 0   <span class="c"># ortak puan yok</span></pre>
+  computeNearestNeighbor içinde tek satır değişir:<div class="step">distance = minkowski(users[user], users[username], 2)   # 2 → Öklid</div>`},
+  {t:'Hailey ile Jordyn, r = ∞', src:'Alıştırma', b:`Ortak farklar: 0,5; 3; 1; 0; 3 → Supremum = <b>3</b>. Manhattan 7,5, Öklid 4,387 idi.`}
+ ],
+ questions:[
+  {type:'num', q:'Farklar (3, 4) için r = 2 Minkowski kaçtır?', ans:5, tol:0.01, exp:'√(9 + 16) = 5. Bu Öklid’dir.'},
+  {type:'num', q:'Farklar (3, 4) için r = 1 Minkowski kaçtır?', ans:7, tol:0.01, exp:'3 + 4 = 7. Bu Manhattan’dır.'},
+  {type:'num', q:'Farklar (3, 4) için r = ∞ Minkowski kaçtır?', ans:4, tol:0.01, exp:'En büyük fark: 4.'},
+  {type:'num', q:'Farklar (1, 1, 1) için r = 3 Minkowski yaklaşık kaçtır? (2 ondalık)', ans:1.44, tol:0.02, exp:'(1 + 1 + 1)^(1/3) = 3^(1/3) ≈ 1,44.'},
+  {type:'mcq', q:'r = ∞ olan uzaklığın kitaptaki adı nedir?', opts:['Cosine Distance','Supremum Distance','Pearson Distance','Cab Driver Distance'], ans:1, exp:'r = ∞ : Supremum Distance.'},
+  {type:'mcq', q:'Kitaptaki “Here’s the scoop!” notu ne söyler?', opts:['r küçüldükçe büyük farklar önemlenir','r büyüdükçe tek bir boyuttaki büyük fark toplamı daha çok etkiler','r sadece 1 veya 2 olabilir','r, ortak öğe sayısıdır'], ans:1, exp:'“The greater the r, the more a large difference in one dimension will influence the total difference.”'},
+  {type:'mcq', q:'minkowski() hiç ortak puan yoksa ne döndürür?', opts:['None','Sonsuz','0','Hata verir'], ans:2, exp:'commonRatings False kalırsa 0 döndürülür. Bu uzaklıkta “çok yakın” gibi okunabileceği için dikkat edilmelidir.'}
+ ]
+},
+{
+ id:'komsu', title:'En yakın komşu ve öneri', short:'Komşuyu bul, onun sevdiklerinden önerini yap.',
+ lead:'Kullanıcının herkese olan uzaklığı hesaplanır ve sıralanır. En yakın kişi komşu olur. Komşunun puanlayıp kullanıcının puanlamadığı öğeler, komşunun puanına göre büyükten küçüğe önerilir.',
+ formula:'1) computeNearestNeighbor(user) → [(uzaklık, kişi), …] küçükten büyüğe<br>2) komşu = liste[0]<br>3) öneriler = {öğe: komşu puanı | komşu puanladı ∧ kullanıcı puanlamadı}<small>Varsayım: kullanıcı, o öğeyi komşusuyla aynı (ya da çok benzer) puanlardı.</small>',
+ when:['Basit, açıklanabilir öneri: “Veronica’ya benzediğin için…”','Kullanıcı sayısı herkesle karşılaştırmaya izin veriyorsa','Sınavdaki “recommend(...) ne döndürür?” soruları'],
+ whenNot:['Komşunun tuhaf zevkleri olabilir (polka örneği) → k-NN','Komşu yeni bir şey puanlamamışsa öneri listesi boş çıkar'],
+ qtypes:['“computeNearestNeighbor(\'Hailey\') sonucunu yazın”','“recommend(\'Chan\') ne döndürür?”','“Angelica için neden öneri çıkmadı?”'],
+ calc:'explorer',
+ examples:[
+  {t:'Hailey için öneri', src:'PDF s. 2-16', b:`<div class="step">&gt;&gt;&gt; computeNearestNeighbor("Hailey", users)
+[(2.0, 'Veronica'), (4.0, 'Chan'), (4.0, 'Sam'), (4.5, 'Dan'),
+ (5.0, 'Angelica'), (5.5, 'Bill'), (7.5, 'Jordyn')]
+&gt;&gt;&gt; recommend('Hailey', users)
+[('Phoenix', 4.0), ('Blues Traveler', 3.0), ('Slightly Stoopid', 2.5)]</div>Komşu Veronica. Hailey Phoenix’i puanlamamış, Veronica 4 vermiş, bu yüzden Hailey’nin de seveceği varsayılır.`},
+  {t:'Chan ve Sam için öneri', src:'PDF s. 2-16, 2-17', b:`<div class="step">&gt;&gt;&gt; recommend('Chan', users)
+[('The Strokes', 4.0), ('Vampire Weekend', 1.0)]
+&gt;&gt;&gt; recommend('Sam', users)
+[('Deadmau5', 1.0)]</div>Kitabın yorumu: “Chan The Strokes’u sever, Sam Deadmau5’i sevmez.” Düşük puanlı öğe de listeye girer; bu basit yöntemin bir zayıflığıdır.
+  <div class="note ok">Eşitlik: Chan için Hailey ve Sam’in ikisi de 4. Python tuple’ları sıralarken eşit uzaklıkta isme bakar, ‘Hailey’ &lt; ‘Sam’ olduğu için Hailey seçilir.</div>`},
+  {t:'Angelica için boş liste', src:'PDF s. 2-17', b:`<div class="step">&gt;&gt;&gt; recommend('Angelica', users)
+[]
+&gt;&gt;&gt; computeNearestNeighbor('Angelica', users)
+[(3.5, 'Veronica'), (4.5, 'Chan'), (5.0, 'Hailey'), …]</div>Angelica, Veronica’nın puanladığı her grubu zaten puanlamış. Yeni öğe olmadığı için öneri de yok.`},
+  {t:'Kusurun etkisi: Bill, Dan ve Jordyn’in komşusu da Veronica', src:'Veri setinden', b:`Manhattan ile Bill, Dan ve Jordyn’in en yakın komşusu Veronica çıkar (uzaklık 4). Veronica yalnızca 5 grup puanlamış, bu yüzden toplanan fark sayısı az ve uzaklık küçük kalıyor. Eksik değer kusurunun pratikteki sonucu budur.`},
+  {t:'recommend() fonksiyonu', src:'PDF s. 2-16', b:`<pre class="code">def recommend(username, users):
+    nearest = computeNearestNeighbor(username, users)[0][1]
+    recommendations = []
+    neighborRatings = users[nearest]
+    userRatings = users[username]
+    for artist in neighborRatings:
+        if not artist in userRatings:
+            recommendations.append((artist, neighborRatings[artist]))
+    return sorted(recommendations,
+                  key=lambda artistTuple: artistTuple[1], reverse=True)</pre>`}
+ ],
+ questions:[
+  {type:'mcq', q:'Manhattan’a göre Angelica’nın en yakın komşusu kimdir?', opts:['Chan','Hailey','Veronica','Bill'], ans:2, exp:'Angelica–Veronica = 3,5, en küçük değer.'},
+  {type:'mcq', q:'recommend(\'Bill\') ne döndürür? (Manhattan, k=1)', opts:['[(\'Norah Jones\', 5.0), (\'The Strokes\', 3.0)]','[(\'Phoenix\', 5.0)]','[]','[(\'Deadmau5\', 4.0)]'], ans:0, exp:'Bill’in komşusu Veronica (4). Veronica’nın puanlayıp Bill’in puanlamadığı gruplar Norah Jones 5 ve The Strokes 3.'},
+  {type:'mcq', q:'recommend(\'Dan\') ne döndürür?', opts:['[]','[(\'Norah Jones\', 5.0)]','[(\'Blues Traveler\', 3.0)]','[(\'Deadmau5\', 1.0)]'], ans:1, exp:'Dan’in komşusu Veronica (4). Dan’in puanlamadığı tek grup Norah Jones.'},
+  {type:'num', q:'Hailey’nin Manhattan’a göre en uzak komşusu Jordyn’dir. Aralarındaki uzaklık kaçtır?', ans:7.5, tol:0.01, exp:'0,5 + 3 + 1 + 0 + 3 = 7,5.'},
+  {type:'mcq', q:'recommend() sonucu neden puana göre büyükten küçüğe sıralanır?', opts:['Alfabetik olsun diye','En çok sevileceği tahmin edilen öğe başta olsun diye','Uzaklığı küçültmek için','Python zorunlu kıldığı için'], ans:1, exp:'reverse=True ile komşunun en yüksek puan verdiği öğe ilk sırada gösterilir.'},
+  {type:'mcq', q:'Veronica için Manhattan ile öneri ne olur?', opts:['[(\'Broken Bells\', 4.0), (\'Deadmau5\', 1.0), (\'Vampire Weekend\', 1.0)]','[]','[(\'Phoenix\', 4.0)]','[(\'Norah Jones\', 5.0)]'], ans:0, exp:'Veronica’nın komşusu Hailey (2). Hailey’nin puanlayıp Veronica’nın puanlamadığı gruplar Broken Bells 4, Deadmau5 1, Vampire Weekend 1.'}
+ ]
+},
+{
+ id:'pearson', title:'Pearson korelasyon katsayısı', short:'Puan enflasyonunu düzeltir; −1 ile +1 arası.',
+ lead:'Pearson, iki kişinin puanlarının aynı yönde birlikte hareket edip etmediğini ölçer. Biri her şeye 4–5, diğeri 1–5 verse bile sıralamaları aynıysa Pearson tam uyum (1) gösterir.',
+ formula:'r = (Σxy − Σx·Σy / n) / ( √(Σx² − (Σx)²/n) · √(Σy² − (Σy)²/n) )<small>Tek geçişli (single-pass) yaklaşık formül. Asıl formül Σ(x−x̄)(y−ȳ) / (√Σ(x−x̄)² · √Σ(y−ȳ)²) birden çok geçiş ister. Yaklaşık formül sayısal olarak kararsızdır (numerically unstable). Büyük r = daha benzer.</small>',
+ when:['Puan enflasyonu (grade inflation): kullanıcılar ölçeği farklı kullanıyor','Bill uçlardan kaçınıyor (2–4), Jordyn her şeyi seviyor (4–5), Hailey ya 1 ya 4 veriyor','Hailey’nin 4’ü, Jordyn’in 4’ünden çok 5’ine benziyor'],
+ whenNot:['Ortak öğe çok azsa (2 öğede sonuç yanıltıcı)','Bir kişinin ortak puanları hep aynıysa payda 0 olur → fonksiyon 0 döndürür','Veri çok seyrekse Kosinüs düşünülmeli'],
+ qtypes:['“Clara ile Robert’ın Pearson’ını adım adım hesaplayın”','“pearson(Angelica, Bill) kaçtır?”','“Grafikte noktalar düz çizgideyse r kaçtır?”','“Pearson hangi problemi çözer?”'],
+ calc:'pair', calcDefault:['4.75, 4.5, 5, 4.25, 4','4, 3, 5, 2, 1'], calcMetric:'pearson',
+ examples:[
+  {t:'Clara ve Robert, adım adım', src:'PDF s. 2-25 … 2-28', b:`<table class="t"><tr><th></th><th class="n">Blues T.</th><th class="n">Norah J.</th><th class="n">Phoenix</th><th class="n">Strokes</th><th class="n">Weird Al</th></tr>
+  <tr><td>Clara (x)</td><td class="n">4,75</td><td class="n">4,5</td><td class="n">5</td><td class="n">4,25</td><td class="n">4</td></tr>
+  <tr><td>Robert (y)</td><td class="n">4</td><td class="n">3</td><td class="n">5</td><td class="n">2</td><td class="n">1</td></tr></table>
+  <div class="step">Σxy           = 19 + 13,5 + 25 + 8,5 + 4 = 70
+Σx·Σy / n     = 22,5 × 15 / 5 = 67,5
+Pay           = 70 − 67,5 = 2,5
+√(Σx² − (Σx)²/n) = √(101,875 − 101,25) = √0,625 = 0,79057
+√(Σy² − (Σy)²/n) = √(55 − 45) = √10 = 3,162277
+r             = 2,5 / (0,79057 × 3,162277) = 2,5 / 2,5 = 1,00</div>
+  Clara’nın puanları 4–5 arasında sıkışmış. Yine de ikisi grupları aynı sırayla sevmiş, bu yüzden <b>tam uyum</b> var.`},
+  {t:'Grafikte uyum derecesi', src:'PDF s. 2-22, 2-23', b:`Clara’nın puanları dikey eksende, Robert’ınkiler yatay eksende gösterilir:
+  <table class="t"><tr><th>Grafik</th><th class="n">Pearson</th></tr>
+  <tr><td>Noktalar tam düz çizgide (Perfect Agreement)</td><td class="n">1</td></tr>
+  <tr><td>Pretty Good Agreement</td><td class="n">0,91</td></tr>
+  <tr><td>Not So Good Agreement</td><td class="n">0,81</td></tr></table>`},
+  {t:'Exercise: Angelica ile diğerleri', src:'PDF s. 2-29', b:`<div class="step">&gt;&gt;&gt; pearson(users['Angelica'], users['Bill'])
+-0.904…     ← neredeyse tam ters zevk
+&gt;&gt;&gt; pearson(users['Angelica'], users['Hailey'])
+0.420…
+&gt;&gt;&gt; pearson(users['Angelica'], users['Jordyn'])
+0.763…      ← en benzer</div>`},
+  {t:'Yeni örnek: cimri ve cömert puanlayıcı', src:'Alıştırma', b:`Ece (2, 3, 4), Can (4, 4,5, 5)
+  <div class="step">Σx = 9, Σy = 13,5, Σxy = 41,5, n = 3
+Pay   = 41,5 − 9 × 13,5 / 3 = 1
+Payda = √(29 − 27) × √(61,25 − 60,75) = 1,414 × 0,707 = 1
+r     = 1</div>Manhattan’a göre aralarındaki uzaklık 4,5 ve “uzak” görünürler. Pearson ise zevklerinin birebir aynı olduğunu gösterir.`},
+  {t:'Yeni örnek: tam ters zevk', src:'Alıştırma', b:`x = (1, 2, 3), y = (3, 2, 1)<div class="step">Σxy = 3 + 4 + 3 = 10;  Σx·Σy/n = 6·6/3 = 12  → Pay = −2
+Payda = √(14 − 12) · √(14 − 12) = 2
+r = −1</div>`},
+  {t:'pearson() fonksiyonu', src:'PDF s. 2-30', b:`<pre class="code">def pearson(rating1, rating2):
+    sum_xy = sum_x = sum_y = sum_x2 = sum_y2 = n = 0
+    for key in rating1:
+        if key in rating2:
+            n += 1
+            x, y = rating1[key], rating2[key]
+            sum_xy += x * y; sum_x += x; sum_y += y
+            sum_x2 += x**2;  sum_y2 += y**2
+    if n == 0: return 0                     <span class="c"># ortak puan yok</span>
+    denominator = sqrt(sum_x2 - (sum_x**2)/n) * sqrt(sum_y2 - (sum_y**2)/n)
+    if denominator == 0: return 0           <span class="c"># sıfıra bölme</span>
+    return (sum_xy - (sum_x * sum_y)/n) / denominator</pre>`}
+ ],
+ questions:[
+  {type:'num', q:'x = (1, 2, 3, 4), y = (2, 4, 6, 8) için Pearson kaçtır?', ans:1, tol:0.01, exp:'y = 2x, tam doğrusal ilişki → r = 1.'},
+  {type:'num', q:'x = (1, 2, 3), y = (2, 1, 3) için Pearson kaçtır? (2 ondalık)', ans:0.5, tol:0.02, exp:'Σxy = 2 + 2 + 9 = 13; Σx·Σy/n = 12 → Pay 1. Payda √2·√2 = 2 → r = 0,5.'},
+  {type:'num', q:'Clara–Robert örneğinde pay (numerator) kaçtır?', ans:2.5, tol:0.01, exp:'70 − 67,5 = 2,5.'},
+  {type:'mcq', q:'Pearson katsayısının aralığı nedir?', opts:['0 ile 1','−1 ile 1','0 ile ∞','1 ile 5'], ans:1, exp:'1 tam uyum, −1 tam ters uyum.'},
+  {type:'mcq', q:'Kitapta Pearson hangi problemi çözmek için tanıtılır?', opts:['Seyrek veri','Hesap hızı','Puan enflasyonu / farklı ölçek kullanımı','Polka problemi'], ans:2, exp:'“Blame the users”: Bill 2–4, Jordyn 4–5, Hailey 1 ya da 4 veriyor. Pearson bu farkı ortadan kaldırır.'},
+  {type:'mcq', q:'Tek geçişli Pearson formülünün kitapta belirtilen dezavantajı nedir?', opts:['Çok yavaştır','Sayısal olarak kararsızdır (küçük hatalar büyüyebilir)','Negatif değer veremez','Sadece 2 boyutta çalışır'], ans:1, exp:'Formül “numerically unstable” olarak tanımlanır. Büyük artısı tek geçişte hesaplanabilmesidir.'},
+  {type:'mcq', q:'pearson(Angelica, Bill) ≈ −0,90 ise ne yapmalıyız?', opts:['Bill’in sevdiklerini Angelica’ya önermeliyiz','Bill’in sevdiklerini Angelica’ya önermemeliyiz','Bill en yakın komşudur','Hiçbir anlam taşımaz'], ans:1, exp:'Güçlü negatif korelasyon ters zevk demektir.'}
+ ]
+},
+{
+ id:'kosinus', title:'Kosinüs benzerliği', short:'Seyrek veri için; 0-0 eşleşmelerini yok sayar.',
+ lead:'Kosinüs benzerliği iki vektör arasındaki açıya bakar. Metin madenciliğinde çok popülerdir ve işbirlikçi filtrelemede de kullanılır. En önemli özelliği ortak sıfırları (0-0 eşleşmelerini) yok saymasıdır.',
+ formula:'cos(x, y) = (x · y) / (‖x‖ × ‖y‖)<br>‖x‖ = √(Σ xᵢ²)<small>· nokta (iç) çarpım demektir. Aralık −1 (tam ters) ile 1 (tam benzer) arası; puanlar negatif değilse 0 ile 1 arası. Puanlanmamış değerler 0 alınır.</small>',
+ when:['Veri seyrek: iTunes’ta 15 milyon şarkı, kişi başı 4 bin','Metin: “The Space Pioneers” kitabında 6.629 farklı kelime, İngilizcede 1 milyondan fazla','Dinlenme sayısı, kelime frekansı gibi sayım verileri','Ortak sıfırların benzerlik sayılmaması gerektiğinde'],
+ whenNot:['Puan enflasyonunu düzeltmez (Clara–Robert: Pearson 1, Kosinüs 0,935)','Veri yoğunsa ve büyüklük önemliyse uzaklıklar yeterli'],
+ qtypes:['“Angelica ile Veronica’nın kosinüs benzerliğini hesaplayın (boşlar 0)”','“Bu veri için hangi ölçü uygun?”','“Kosinüs neden ortak sıfırları önemsemez?”'],
+ calc:'pair', calcDefault:['3.5, 2, 0, 4.5, 5, 1.5, 2.5, 2','3, 0, 0, 5, 4, 2.5, 3, 0'], calcMetric:'cosine',
+ examples:[
+  {t:'Clara ve Robert', src:'PDF s. 2-33', b:`<div class="step">x = (4,75; 4,5; 5; 4,25; 4)   y = (4; 3; 5; 2; 1)
+‖x‖ = √101,875 = 10,09      ‖y‖ = √55 = 7,416
+x·y = 19 + 13,5 + 25 + 8,5 + 4 = 70
+cos = 70 / (10,093 × 7,416) = 70 / 74,85 = 0,935</div>Çok iyi uyum, ama Pearson’daki 1 kadar değil. Kosinüs, Clara’nın hep yüksek puan vermesini düzeltmez.`},
+  {t:'Sharpen your pencil: Angelica ve Veronica', src:'PDF s. 2-35', b:`<div class="step">x = (3,5; 2; 0; 4,5; 5; 1,5; 2,5; 2)
+y = (3;   0; 0; 5;   4; 2,5; 3;   0)
+‖x‖ = √74 = 8,602      ‖y‖ = √65,25 = 8,078
+x·y = 10,5 + 0 + 0 + 22,5 + 20 + 3,75 + 7,5 + 0 = 64,25
+cos = 64,25 / 69,487 = 0,9246</div>`},
+  {t:'Dinlenme sayıları: Ann, Ben, Sally', src:'PDF s. 2-31', b:`<table class="t"><tr><th></th><th class="n">Decemberists</th><th class="n">Radiohead</th><th class="n">Katy Perry</th></tr>
+  <tr><td>Ann</td><td class="n">10</td><td class="n">5</td><td class="n">32</td></tr>
+  <tr><td>Ben</td><td class="n">15</td><td class="n">25</td><td class="n">1</td></tr>
+  <tr><td>Sally</td><td class="n">12</td><td class="n">6</td><td class="n">27</td></tr></table>
+  <div class="step">cos(Ann, Sally) ≈ 0,99     cos(Ann, Ben) ≈ 0,31</div>Kitabın dediği gibi, Sally’nin dinleme alışkanlığı Ann’e Ben’den çok daha yakın. Asıl problem gerçek veride çıkar: milyonlarca şarkının çoğu 0’dır.`},
+  {t:'Metin benzerliği fikri', src:'PDF s. 2-32', b:`Bir kitabı kelime frekanslarıyla temsil edersek, “the” %6,13, “Tom” %0,89, “space” %0,25 gibi değerler çıkar. 1 milyon kelimelik vektörün neredeyse tamamı 0’dır. İki kitabın da içermediği kelimeler benzerlik sebebi olmamalıdır. Kosinüs tam olarak bunu sağlar.`},
+  {t:'Yeni örnek: 4 şarkı', src:'Alıştırma', b:`Can (2, 0, 1, 0), Ece (1, 0, 3, 0)<div class="step">x·y = 2 + 0 + 3 + 0 = 5
+‖x‖ = √5 ≈ 2,236   ‖y‖ = √10 ≈ 3,162
+cos = 5 / 7,071 ≈ 0,707</div>2. ve 4. şarkıdaki ortak sıfırlar sonuca hiç katkı yapmadı.`}
+ ],
+ questions:[
+  {type:'num', q:'x = (1, 0), y = (0, 1) için kosinüs benzerliği kaçtır?', ans:0, tol:0.01, exp:'x·y = 0 → cos = 0 (ortak hiçbir şey yok, vektörler dik).'},
+  {type:'num', q:'x = (1, 2), y = (2, 4) için kosinüs benzerliği kaçtır?', ans:1, tol:0.01, exp:'y = 2x, aynı yön → cos = 1. Büyüklük farkı önemsenmez.'},
+  {type:'num', q:'x = (3, 4), y = (4, 3) için kosinüs benzerliği kaçtır? (2 ondalık)', ans:0.96, tol:0.01, exp:'x·y = 24, ‖x‖ = ‖y‖ = 5 → 24/25 = 0,96.'},
+  {type:'num', q:'Angelica–Veronica örneğinde iç çarpım (x·y) kaçtır?', ans:64.25, tol:0.01, exp:'10,5 + 22,5 + 20 + 3,75 + 7,5 = 64,25.'},
+  {type:'mcq', q:'Kosinüs benzerliği en çok hangi alanda popülerdir?', opts:['Görüntü işleme','Metin madenciliği','Muhasebe','Kriptografi'], ans:1, exp:'“very popular in text mining but also used in collaborative filtering”.'},
+  {type:'mcq', q:'Kosinüs, uzaklık ölçülerinden farklı olarak neyi yok sayar?', opts:['Büyük farkları','0-0 eşleşmelerini (ortak sıfırları)','Negatif puanları','Ortak öğeleri'], ans:1, exp:'“Cosine similarity ignores 0-0 matches.”'},
+  {type:'mcq', q:'Clara–Robert için Pearson 1, Kosinüs 0,935. Bunun sebebi nedir?', opts:['Kosinüs puan enflasyonunu düzeltmez','Kosinüs hatalı hesaplanmış','Pearson ortak sıfırları sayar','Kosinüs sadece metinde çalışır'], ans:0, exp:'Pearson her kişinin ortalamasını çıkarır, Kosinüs ham değerlerle çalışır.'}
+ ]
+},
+{
+ id:'seyrek', title:'Seyrek veri ve sıfır atama', short:'Ölçü seçimini değiştiren iki tuzak ve karar kuralı.',
+ lead:'Uzaklık ölçüleri iki durumda yanılır: ortak öğe az olduğunda ve puanlanmamış değerlere 0 yazıldığında. Bu kategori, hangi durumda hangi ölçünün seçileceğini anlatır.',
+ formula:'Yoğun veri + büyüklük önemli → Manhattan / Öklid<br>Puan enflasyonu (farklı ölçekler) → Pearson<br>Seyrek veri                   → Kosinüs<small>PDF s. 2-36’daki “Which similarity measure to use?” kuralı.</small>',
+ when:['Bir veri setine ölçü seçerken','“Neden yanlış kişi en yakın çıktı?” sorularında','Eksik değerlerle nasıl başa çıkılacağı sorularında'],
+ whenNot:['“Boşlara 0 yazalım” çözümü uzaklık ölçülerinde işe yaramaz'],
+ qtypes:['“Linda’ya Jake mi daha yakın, Eric mi?”','“0 atamak neden çözüm değil?”','“Bu veri için hangi ölçüyü kullanmalısınız?”'],
+ calc:'pair', calcDefault:['0, 0, 0, 4.5, 5, 4.5, 0, 0, 0, 0','5, 4, 4, 5, 5, 5, 5, 5, 4, 4'], calcMetric:'manhattanZero',
+ examples:[
+  {t:'Linda, Eric ve Jake: az ortak öğe tuzağı', src:'PDF s. 2-37, 2-38', b:`Üçü de 100 şarkı puanlamış. Linda ile Eric 60’ların rock müziğini seviyor; Jake country hayranı.
+  <table class="t"><tr><th>Çift</th><th class="n">Ortak şarkı</th><th class="n">Fark</th><th class="n">Manhattan</th><th class="n">Öklid</th></tr>
+  <tr><td>Linda – Eric</td><td class="n">20</td><td class="n">ort. 0,5</td><td class="n">20 × 0,5 = 10</td><td class="n">√(0,25 × 20) = 2,236</td></tr>
+  <tr><td>Linda – Jake</td><td class="n">1</td><td class="n">3’e karşı 5</td><td class="n">2</td><td class="n">√4 = 2</td></tr></table>
+  İki ölçü de Jake’i daha yakın gösterir. Bu yanlıştır, çünkü uzaklık ortak öğe sayısı arttıkça büyür.`},
+  {t:'Jake, Cooper ve Kelsey: sıfır atama tuzağı', src:'PDF s. 2-39, 2-40', b:`0 = puanlamamış.
+  <table class="t"><tr><th>Şarkı</th>${[1,2,3,4,5,6,7,8,9,10].map(i=>`<th class="n">${i}</th>`).join('')}</tr>
+  <tr><td>Jake</td>${[0,0,0,4.5,5,4.5,0,0,0,0].map(v=>`<td class="n">${f(v,1)}</td>`).join('')}</tr>
+  <tr><td>Cooper</td>${[0,0,4,5,5,5,0,0,0,0].map(v=>`<td class="n">${f(v,1)}</td>`).join('')}</tr>
+  <tr><td>Kelsey</td>${[5,4,4,5,5,5,5,5,4,4].map(v=>`<td class="n">${f(v,1)}</td>`).join('')}</tr></table>
+  <div class="step">d(Cooper, Jake) = 4 + 0,5 + 0 + 0,5 = 5
+d(Kelsey, Jake) = 5+4+4+0,5+0+0,5+5+5+4+4 = 32</div>
+  Ortak puanladıkları 4, 5 ve 6. şarkılarda Cooper ve Kelsey Jake’e eşit derecede yakın. Yine de sıfırlar uzaklığa hâkim olur ve Kelsey 32 birim uzak görünür.`},
+  {t:'Çözüm 1: ortalama uzaklık', src:'PDF s. 2-40', b:`Uzaklığı ortak öğe sayısına böl:<div class="step">Linda–Eric : 10 / 20 = 0,5   ← gerçekten daha yakın
+Linda–Jake :  2 / 1  = 2</div>`},
+  {t:'Çözüm 2: Kosinüs', src:'Alıştırma', b:`Jake/Cooper/Kelsey verisinde boşlar 0 alınarak kosinüs hesaplanırsa: cos(Cooper, Jake) ≈ 0,91, cos(Kelsey, Jake) ≈ 0,59. Fark Manhattan’daki 5’e 32 farkından çok daha küçük, çünkü 0-0 eşleşmeleri sonucu etkilemez. Kelsey’nin 0 olmayan fazla değerleri yalnızca vektör uzunluğunu artırır.`},
+  {t:'Karar tablosu', src:'PDF s. 2-36', b:`<table class="t"><tr><th>Veri</th><th>Ölçü</th><th>Kitaptaki örnek</th></tr>
+  <tr><td>Farklı ölçek kullanımı</td><td>Pearson</td><td>Clara 4–5, Robert 1–5</td></tr>
+  <tr><td>Yoğun, büyüklük önemli</td><td>Manhattan / Öklid</td><td>Ms. X ve 3 okuyucu</td></tr>
+  <tr><td>Seyrek</td><td>Kosinüs</td><td>iTunes, kelime frekansı</td></tr></table>`}
+ ],
+ questions:[
+  {type:'num', q:'A ile B 40 ortak şarkıda ortalama 0,25 farklı. Manhattan uzaklığı kaçtır?', ans:10, tol:0.01, exp:'40 × 0,25 = 10.'},
+  {type:'num', q:'Aynı A–B için Öklid uzaklığı yaklaşık kaçtır? (2 ondalık)', ans:1.58, tol:0.02, exp:'√(0,25² × 40) = √2,5 ≈ 1,58.'},
+  {type:'num', q:'A–B Manhattan 10 ve 40 ortak şarkı var. “Ortalama uzaklık” kaçtır?', ans:0.25, tol:0.01, exp:'10 / 40 = 0,25.'},
+  {type:'mcq', q:'Veri çok seyrekse kitap hangi ölçüyü önerir?', opts:['Manhattan','Öklid','Kosinüs','Supremum'], ans:2, exp:'“If the data is sparse consider using Cosine Similarity.”'},
+  {type:'mcq', q:'Kullanıcılar farklı ölçekler kullanıyorsa hangi ölçü önerilir?', opts:['Pearson','Manhattan','Kosinüs','Minkowski r=∞'], ans:0, exp:'Puan enflasyonu varsa Pearson.'},
+  {type:'mcq', q:'Eksik değerlere 0 atamak uzaklık ölçülerinde neden işe yaramaz?', opts:['Sıfırlar uzaklığa hâkim olur ve çok puanlayan kişiyi uzak gösterir','Excel 0’ı hesaplayamaz','Uzaklık negatif olur','Pearson bozulur'], ans:0, exp:'“The problem is that these zero values tend to dominate any measure of distance.”'},
+  {type:'mcq', q:'Linda–Jake örneğinde neden Jake daha yakın görünür?', opts:['Jake’in zevki Linda’ya çok benziyor','Tek ortak şarkı olduğu için toplanan fark sayısı az','Öklid hatalı','Jake her şeye 5 veriyor'], ans:1, exp:'Uzaklık ortak öğe sayısıyla birlikte büyür. 1 öğelik bir karşılaştırma, 20 öğelik bir karşılaştırmadan doğal olarak daha küçük çıkar.'}
+ ]
+},
+{
+ id:'knn', title:'k-en yakın komşu (k-NN)', short:'Birden çok komşu, Pearson ağırlıklı tahmin.',
+ lead:'Tek bir “en benzer” kişiye güvenmek, o kişinin tuhaflıklarını öneriye taşır. k-NN, en benzer k kişinin puanlarını Pearson değerleriyle orantılı ağırlıklandırarak bir tahmin puanı üretir.',
+ formula:'etkiᵢ = Pearsonᵢ / Σ Pearson   (Pie of Influence™)<br>tahmin = Σ (puanᵢ × etkiᵢ)<small>En iyi k değeri uygulamaya özeldir ve deneyerek bulunur. k = 1 basit en yakın komşudur.</small>',
+ when:['Tek komşunun tuhaflıkları önlenmek isteniyor (polka, kaniş kitabı)','Bir öğeye sayısal puan tahmini gerekiyor','Önerileri tahmini puana göre sıralamak gerekiyor'],
+ whenNot:['k çok büyük olursa az benzer kişiler de katılır ve sonuç ortalamaya kayar','Pearson değerleri negatifse ağırlıklar anlamsızlaşabilir'],
+ qtypes:['“k = 3 için Grey Wardens tahmini kaçtır?”','“k = 2 olursa tahmin ne olur?”','“Sally’nin etki payı yüzde kaçtır?”','“Neden tek komşu yetmez?”'],
+ calc:'knn',
+ examples:[
+  {t:'Neden gerekli? Tuhaflıklar (Weirdnesses)', src:'PDF s. 2-41', b:`Amy Phoenix, Passion Pit ve Vampire Weekend’i seviyor. En yakın komşusu Bob da aynı grupları seviyor. Ama Bob’un babası polka grubu Walter Ostanek Band’de akordeon çaldığı için Bob bu gruba 5 vermiş. Sistem polka grubunu Amy’ye önerir.<br><br>Benzer şekilde, profesörün en yakın komşusu kaniş sevdiği için sistem ona <i>The Secret Lives of Standard Poodles</i> kitabını önerir.<div class="note">Sorun tek kişiye güvenmek. Çözüm, k kişiyi birlikte kullanmak.</div>`},
+  {t:'Grey Wardens, k = 3', src:'PDF s. 2-43, 2-44', b:`<table class="t"><tr><th>Kişi</th><th class="n">Pearson</th><th class="n">Etki</th><th class="n">Puan</th><th class="n">Puan × Etki</th></tr>
+  <tr><td>Sally</td><td class="n">0,8</td><td class="n">0,8/2 = %40</td><td class="n">3,5</td><td class="n">1,4</td></tr>
+  <tr><td>Eric</td><td class="n">0,7</td><td class="n">0,7/2 = %35</td><td class="n">5</td><td class="n">1,75</td></tr>
+  <tr><td>Amanda</td><td class="n">0,5</td><td class="n">0,5/2 = %25</td><td class="n">4,5</td><td class="n">1,125</td></tr>
+  <tr class="hl"><td>Tahmin</td><td class="n">Σ = 2</td><td></td><td></td><td class="n">4,275</td></tr></table>`},
+  {t:'Sharpen your pencil: k = 2', src:'PDF s. 2-45', b:`<div class="step">= 3,5 × (0,8 / 1,5) + 5 × (0,7 / 1,5)
+= 3,5 × 0,5333 + 5 × 0,4667
+= 1,867 + 2,333
+= 4,2</div>Amanda çıkınca Sally’nin payı %40’tan %53’e çıkar ve tahmin onun düşük puanına doğru kayar.`},
+  {t:'Yeni örnek', src:'Alıştırma', b:`Pearson 0,9 / 0,6 / 0,5, puanlar 4 / 2 / 5<div class="step">Σ = 2,0 → etkiler 0,45 / 0,30 / 0,25
+tahmin = 4×0,45 + 2×0,30 + 5×0,25 = 1,8 + 0,6 + 1,25 = 3,65</div>k = 1 olsaydı tahmin yalnızca ilk kişinin puanı, yani 4 olurdu.`},
+  {t:'Komşu bir öğeyi puanlamadıysa', src:'recommend() mantığı', b:`Sınıftaki recommend() her komşu için <code>puan × ağırlık</code> değerini öğenin toplamına ekler. Bir komşu öğeyi puanlamadıysa o komşudan katkı gelmez. Bu yüzden k komşudan çoğunun puanladığı öğeler daha yüksek skor alır.`}
+ ],
+ questions:[
+  {type:'num', q:'Pearson 0,6 ve 0,4 olan iki komşu bir filme 5 ve 3 vermiş. Tahmin kaçtır?', ans:4.2, tol:0.01, exp:'Σ = 1 → 5×0,6 + 3×0,4 = 3 + 1,2 = 4,2.'},
+  {type:'num', q:'Pearson 0,9 ve 0,3 olan iki komşu 2 ve 5 vermiş. Tahmin kaçtır?', ans:2.75, tol:0.01, exp:'Etkiler 0,75 ve 0,25 → 2×0,75 + 5×0,25 = 1,5 + 1,25 = 2,75.'},
+  {type:'num', q:'k = 3 Grey Wardens örneğinde Eric’in etkisi yüzde kaçtır?', ans:35, tol:0.5, exp:'0,7 / 2 = 0,35 → %35.'},
+  {type:'num', q:'k = 2 Grey Wardens örneğinde Sally’nin etkisi yaklaşık kaçtır? (ondalık, ör. 0,53)', ans:0.533, tol:0.01, exp:'0,8 / 1,5 ≈ 0,533.'},
+  {type:'mcq', q:'Kitaba göre en iyi k değeri nasıl belirlenir?', opts:['Her zaman 3’tür','Kullanıcı sayısının kareköküdür','Uygulamaya özeldir, deneyerek bulunur','Her zaman 1’dir'], ans:2, exp:'“The best value for k is application specific—you will need to do some experimentation.”'},
+  {type:'mcq', q:'k-NN hangi problemi çözmek için önerilir?', opts:['Puan enflasyonu','Tek bir komşunun tuhaflıklarının öneriye geçmesi','Seyrek veri','Yavaş hesap'], ans:1, exp:'Polka ve kaniş örnekleri: “Any quirk that person has is passed on as a recommendation.”'}
+ ]
+},
+{
+ id:'python', title:'Recommender sınıfı ve gerçek veri', short:'Python’da birleştirme ve Book-Crossing verisi.',
+ lead:'Bölümün sonunda tüm parçalar bir Python sınıfında birleşir: veri sözlükle temsil edilir, Pearson ile en yakın komşular bulunur, k-NN ağırlıklarıyla en fazla n öneri döndürülür. Ardından 1 milyondan fazla puan içeren gerçek bir kitap veri seti yüklenir.',
+ formula:'r = recommender(data, k=1, metric=\'pearson\', n=5)<br>r.recommend(user)     → [(öğe, skor), …][:n]<br>r.loadBookDB(path)    → BX-*.csv dosyalarını yükler<small>k: komşu sayısı · metric: benzerlik fonksiyonu · n: en fazla öneri sayısı</small>',
+ when:['Kodun ne döndüreceğini soran sorular','Parametrelerin (k, metric, n) anlamı','Sözlükle veri temsili: users["Veronica"]','Gerçek veriyle ölçeklenebilirlik'],
+ whenNot:['Pearson’da sıralama büyükten küçüğe (reverse=True), Manhattan’da küçükten büyüğe yapılır; karıştırmayın'],
+ qtypes:['“r.recommend(\'Jordyn\') ne döndürür?”','“Neden reverse=True?”','“BX veri setinde hangi tablolar var?”','“users[\'Veronica\'] çıktısı nedir?”'],
+ calc:'explorer2',
+ examples:[
+  {t:'Veriyi Python sözlüğüyle temsil etmek', src:'PDF s. 2-13, 2-14', b:`<pre class="code">users = {"Angelica": {"Blues Traveler": 3.5, "Broken Bells": 2.0, …},
+         "Bill":     {"Blues Traveler": 2.0, "Broken Bells": 3.5, …},
+         …}
+
+&gt;&gt;&gt; users["Veronica"]
+{"Blues Traveler": 3.0, "Norah Jones": 5.0, "Phoenix": 4.0,
+ "Slightly Stoopid": 2.5, "The Strokes": 3.0}</pre>Sözlük (associative array, hash table) kullanılır, çünkü bir kişinin puanlamadığı grup hiç anahtar olarak yer almaz. Eksik değer doğal olarak temsil edilir.`},
+  {t:'Sınıfın kurucusu', src:'PDF s. 2-47', b:`<pre class="code">class recommender:
+    def __init__(self, data, k=1, metric='pearson', n=5):
+        self.k = k            <span class="c"># k-NN için komşu sayısı</span>
+        self.n = n            <span class="c"># en fazla öneri sayısı</span>
+        self.metric = metric
+        if self.metric == 'pearson':
+            self.fn = self.pearson
+        if type(data).__name__ == 'dict':
+            self.data = data</pre>`},
+  {t:'computeNearestNeighbor: neden reverse=True?', src:'PDF s. 2-51', b:`<pre class="code">distances.append((instance, distance))
+distances.sort(key=lambda artistTuple: artistTuple[1], reverse=True)</pre>Pearson’da <b>büyük değer daha benzer</b> demektir, bu yüzden büyükten küçüğe sıralanır. İlk Manhattan sürümünde <code>distances.sort()</code> küçükten büyüğe sıralıyordu.`},
+  {t:'Çalıştırma örneği', src:'PDF s. 2-53', b:`<div class="step">&gt;&gt;&gt; r = recommender(users)
+&gt;&gt;&gt; r.recommend('Jordyn')
+[('Blues Traveler', 5.0)]
+&gt;&gt;&gt; r.recommend('Hailey')
+[('Phoenix', 5.0), ('Slightly Stoopid', 4.5)]</div>Pearson’a göre Jordyn’in en benzeri Chan (0,80); Chan Blues Traveler’a 5 vermiş. Hailey’nin en benzeri Jordyn (0,61). Manhattan ile Hailey’nin komşusu Veronica çıkıyordu, Pearson başka bir kişi seçti.`},
+  {t:'Gerçek veri: Book-Crossing', src:'PDF s. 2-53 … 2-55', b:`Cai-Nicolas Ziegler’in topladığı veri: <b>278.858 kullanıcı</b>, <b>271.379 kitap</b>, 1 milyondan fazla puan.
+  <table class="t"><tr><th>Dosya</th><th>İçerik</th></tr>
+  <tr><td>BX-Users</td><td>user-id, konum, yaş (isimler anonim)</td></tr>
+  <tr><td>BX-Books</td><td>ISBN, başlık, yazar, yıl, yayıncı</td></tr>
+  <tr><td>BX-Book-Ratings</td><td>user-id, ISBN, 0–10 puan</td></tr></table>
+  <div class="step">&gt;&gt;&gt; r.loadBookDB('/Users/raz/Downloads/BX-Dump/')
+1700018
+&gt;&gt;&gt; r.recommend('171118')     # Toronto’dan bir kullanıcı
+[("The Godmother's Web by Elizabeth Ann Scarborough", 10.0), …]</div>Yazarın bilgisayarında yükleme 24 saniye, bir sorgu 30 saniye sürüyor.`},
+  {t:'Projeler', src:'PDF s. 2-55', b:`1) Manhattan ve Öklid’i sınıfa ekleyip üç yöntemin sonuçlarını karşılaştırın.<br>2) Kitabın sitesindeki 25 filmlik puan dosyasını yükleyen bir fonksiyon yazın ve recommend ile film önerin.`}
+ ],
+ questions:[
+  {type:'mcq', q:'recommender sınıfında varsayılan k değeri nedir?', opts:['3','5','1','10'], ans:2, exp:'__init__(self, data, k=1, metric=\'pearson\', n=5).'},
+  {type:'mcq', q:'n parametresi neyi belirler?', opts:['Komşu sayısını','En fazla kaç öneri döndürüleceğini','Ortak öğe sayısını','r değerini'], ans:1, exp:'“n is the maximum number of recommendations to make.”'},
+  {type:'mcq', q:'r.recommend(\'Jordyn\') ne döndürür?', opts:['[(\'Phoenix\', 5.0)]','[(\'Blues Traveler\', 5.0)]','[]','[(\'Blues Traveler\', 3.0)]'], ans:1, exp:'Pearson ile en benzeri Chan; Chan’ın puanlayıp Jordyn’in puanlamadığı tek grup Blues Traveler (5).'},
+  {type:'mcq', q:'Pearson sürümünde computeNearestNeighbor neden reverse=True ile sıralar?', opts:['Pearson’da büyük değer daha benzer olduğu için','Alfabetik sıra için','Hız için','Negatif değerleri silmek için'], ans:0, exp:'Uzaklıkta küçük, Pearson’da büyük değer daha benzerdir.'},
+  {type:'mcq', q:'BX-Book-Ratings tablosundaki puan aralığı nedir?', opts:['1–5','0–10','0–1','1–100'], ans:1, exp:'“a rating from 0-10”.'},
+  {type:'num', q:'Book-Crossing veri setinde kaç kullanıcı vardır? (rakamla)', ans:278858, tol:0.5, exp:'278.858 kullanıcı, 271.379 kitap.'},
+  {type:'mcq', q:'Veriyi temsil etmek için hangi Python yapısı kullanılır?', opts:['Liste (list)','Sözlük (dictionary)','Küme (set)','Demet (tuple)'], ans:1, exp:'“I am going to use Python\'s dictionary (also called an associative array or hash table).”'}
+ ]
+}
+];
+
+/* ---------- durum ---------- */
+let STATE={};
+try{STATE=JSON.parse(localStorage.getItem('cf-quiz')||'{}')}catch(e){STATE={}}
+function save(){try{localStorage.setItem('cf-quiz',JSON.stringify(STATE))}catch(e){}}
+function catScore(c){let ok=0,done=0;c.questions.forEach((q,i)=>{const s=STATE[c.id+'-'+i];if(s){done++;if(s.ok)ok++}});return {ok,done,total:c.questions.length}}
+function resetAll(){STATE={};save();render()}
+
+/* ---------- arayüz ---------- */
+function navHTML(cur){
+  let h=`<button class="home ${cur==='home'?'active':''}" onclick="go('home')"><span class="num">⌂</span>Ana sayfa</button>`;
+  CATS.forEach((c,i)=>{const s=catScore(c);h+=`<button class="${cur===c.id?'active':''}" onclick="go('${c.id}')"><span class="num">${i+1}</span>${c.title}<span class="prog">${s.ok}/${s.total}</span></button>`});
+  return h;
+}
+function updateTotals(){
+  let ok=0,t=0;CATS.forEach(c=>{const s=catScore(c);ok+=s.ok;t+=s.total});
+  document.getElementById('totalScore').textContent=ok+' / '+t;
+  document.getElementById('totalBar').style.width=(t?ok/t*100:0)+'%';
+}
+function home(){
+  let exCount=0,qCount=0;CATS.forEach(c=>{exCount+=c.examples.length;qCount+=c.questions.length});
+  return `<div class="eyebrow">Veri Madenciliği · Bölüm 2</div>
+  <h2 class="title">“I like what you like”: işbirlikçi filtreleme</h2>
+  <p class="lead">9 kategoride ${exCount} çözümlü örnek, ${qCount} interaktif soru ve hesap makineleri. Her kategoride formülü, ne zaman kullanıldığını, sınavda hangi soru tiplerinde çıktığını, örnekleri ve soruları bulacaksın.</p>
+  <div class="cards">${CATS.map((c,i)=>{const s=catScore(c);return `<button class="card" onclick="go('${c.id}')"><span class="cn">KATEGORİ ${i+1}</span><span class="ct">${c.title}</span><span class="cd">${c.short}</span><span class="cm">${c.examples.length} örnek · ${s.ok}/${s.total} soru doğru</span></button>`}).join('')}</div>
+  <section class="block" style="margin-top:24px"><h3>Hangi ölçüyü ne zaman kullanırım?</h3>
+  <table class="t"><tr><th>Durum</th><th>Teknik</th><th>Büyük değer</th></tr>
+  <tr><td>Yoğun veri, hız önemli</td><td>Manhattan</td><td>daha farklı</td></tr>
+  <tr><td>Yoğun veri, büyük farklar önemli</td><td>Öklid</td><td>daha farklı</td></tr>
+  <tr><td>Uzaklıkları tek formülde denemek</td><td>Minkowski (r)</td><td>daha farklı</td></tr>
+  <tr><td>Kullanıcılar ölçeği farklı kullanıyor</td><td>Pearson</td><td>daha benzer</td></tr>
+  <tr><td>Veri seyrek, ortak sıfırlar çok</td><td>Kosinüs</td><td>daha benzer</td></tr>
+  <tr><td>Tek komşunun tuhaflıklarını önlemek, puan tahmini</td><td>k-NN</td><td>tahmin puanı</td></tr></table></section>
+  <section class="block"><h3>Veri seti <span class="tag">PDF s. 2-6</span></h3>${ratingTable(NAMES)}<div class="src">– = puanlamamış</div></section>`;
+}
+
+function catHTML(c,idx){
+  const s=catScore(c);
+  let h=`<div class="eyebrow">Kategori ${idx+1} / 9</div><h2 class="title">${c.title}</h2><p class="lead">${c.lead}</p>
+  <section class="block"><h3>Formül</h3><div class="formula">${c.formula}</div></section>
+  <section class="block"><h3>Ne zaman kullanılır?</h3><div class="grid2">
+   <div class="when"><h4>Kullan</h4><ul>${c.when.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+   <div class="when no"><h4>Dikkat / kullanma</h4><ul>${c.whenNot.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+  </div><h3 style="margin-top:18px">Sınavda çıkan soru tipleri</h3><div class="qtypes">${c.qtypes.map(x=>`<span>${x}</span>`).join('')}</div></section>
+  <section class="block"><h3>Örnekler <span class="tag">${c.examples.length} örnek</span></h3>
+  ${c.examples.map((e,i)=>`<details class="ex" ${i===0?'open':''}><summary><span class="k">Örnek ${i+1}</span>${e.t}</summary><div class="body"><div class="src">${e.src}</div>${e.b}</div></details>`).join('')}
+  </section>
+  <section class="block calc" id="calcbox">${calcHTML(c)}</section>
+  <section class="block"><div class="qbar"><h3 style="margin:0">Sorular</h3><span class="score" id="qscore">${s.ok} doğru · ${s.done}/${s.total} cevaplandı</span></div>
+  ${c.questions.map((q,i)=>qHTML(c,q,i)).join('')}</section>
+  <div class="navfoot">${idx>0?`<button class="btn ghost" onclick="go('${CATS[idx-1].id}')">← ${CATS[idx-1].title}</button>`:`<button class="btn ghost" onclick="go('home')">← Ana sayfa</button>`}
+  ${idx<CATS.length-1?`<button class="btn" onclick="go('${CATS[idx+1].id}')">${CATS[idx+1].title} →</button>`:`<button class="btn" onclick="go('home')">Ana sayfa →</button>`}</div>`;
+  return h;
+}
+
+function qHTML(c,q,i){
+  const key=c.id+'-'+i, st=STATE[key];
+  let body='';
+  if(q.type==='mcq'){
+    body=`<div class="opts">${q.opts.map((o,j)=>{let cls='';if(st){if(j===q.ans)cls='right';else if(j===st.pick)cls='wrong'}
+      return `<button class="opt ${cls}" ${st?'disabled':''} onclick="answer('${c.id}',${i},${j})">${String.fromCharCode(65+j)}) ${o}</button>`}).join('')}</div>`;
+  }else{
+    body=`<div class="numrow"><input type="text" inputmode="decimal" id="in-${key}" placeholder="cevabın" ${st?'disabled value="'+(st.val||'')+'"':''} onkeydown="if(event.key==='Enter')answerNum('${c.id}',${i})">
+      ${st?'':`<button class="btn" onclick="answerNum('${c.id}',${i})">Kontrol et</button>`}</div>`;
+  }
+  const fb=st?`<div class="fb show ${st.ok?'ok':'no'}"><b>${st.ok?'Doğru!':'Yanlış.'+(q.type==='num'?' Doğru cevap: '+f(q.ans,3):'')}</b>${q.exp}</div>`:'';
+  return `<div class="q" id="q-${key}"><div class="qh"><span class="qn">S${i+1}</span><span class="qt">${q.q}</span></div>${body}${fb}</div>`;
+}
+function answer(cid,i,j){const c=CATS.find(x=>x.id===cid),q=c.questions[i];STATE[cid+'-'+i]={pick:j,ok:j===q.ans};save();refreshQ(c,i)}
+function answerNum(cid,i){const c=CATS.find(x=>x.id===cid),q=c.questions[i];const el=document.getElementById('in-'+cid+'-'+i);
+  const raw=el.value.trim().replace(/\s/g,'').replace('%','');if(!raw)return;
+  let t=raw;if(t.includes(','))t=t.replace(/\./g,'').replace(',','.');else if(/^\d{1,3}(\.\d{3})+$/.test(t))t=t.replace(/\./g,'');
+  const v=parseFloat(t);
+  const ok=isFinite(v)&&Math.abs(v-q.ans)<=q.tol;STATE[cid+'-'+i]={val:raw,ok};save();refreshQ(c,i)}
+function refreshQ(c,i){const el=document.getElementById('q-'+c.id+'-'+i);el.outerHTML=qHTML(c,c.questions[i],i);
+  const s=catScore(c);document.getElementById('qscore').textContent=`${s.ok} doğru · ${s.done}/${s.total} cevaplandı`;
+  document.getElementById('nav').innerHTML=navHTML(c.id);updateTotals()}
+
+/* ---------- hesap makineleri ---------- */
+function parseVec(s){return s.split(/[;,\s]+/).filter(x=>x!=='').map(x=>x==='-'||x==='–'?null:parseFloat(x))}
+function calcHTML(c){
+  if(c.calc==='pair'){
+    const titles={manhattan:'Manhattan hesap makinesi',euclid:'Öklid hesap makinesi',minkowski:'Minkowski hesap makinesi',pearson:'Pearson hesap makinesi',cosine:'Kosinüs hesap makinesi',manhattanZero:'Sıfır atama deneyi'};
+    const help=c.calcMetric==='cosine'?'Boş değer için 0 yaz.':c.calcMetric==='manhattanZero'?'0 yazılan hücreler iki şekilde hesaplanır: “0 bir puandır” ve “0 puanlanmamış demektir”.':'Puanlamamış değer için - yaz. Ortak olmayan öğeler hesaba katılmaz.';
+    return `<h3>${titles[c.calcMetric]} <span class="tag">kendin dene</span></h3>
+    <p style="margin:0 0 12px;color:var(--muted);font-size:14.5px">Değerleri virgülle ayır. ${help}</p>
+    <div class="${c.calcMetric==='minkowski'?'row3':'row'}"><div><label>Kişi 1 (x)</label><input type="text" id="cx" value="${c.calcDefault[0]}"></div><div><label>Kişi 2 (y)</label><input type="text" id="cy" value="${c.calcDefault[1]}"></div>
+    ${c.calcMetric==='minkowski'?'<div><label>r (∞ için inf)</label><input type="text" id="cr" value="3"></div>':''}</div>
+    <button class="btn" onclick="runPair('${c.calcMetric}')">Hesapla</button><div class="out" id="cout"></div>`;
+  }
+  if(c.calc==='knn'){
+    return `<h3>k-NN tahmin makinesi <span class="tag">kendin dene</span></h3>
+    <p style="margin:0 0 12px;color:var(--muted);font-size:14.5px">Her satıra bir komşu: <code>isim, pearson, puan</code></p>
+    <textarea id="kin" rows="4" style="width:100%;font-family:var(--mono);font-size:15px;padding:10px;border:1px solid var(--line);border-radius:8px">Sally, 0.8, 3.5\nEric, 0.7, 5\nAmanda, 0.5, 4.5</textarea>
+    <div style="margin-top:10px"><button class="btn" onclick="runKnn()">Tahmin et</button></div><div class="out" id="kout"></div>`;
+  }
+  if(c.calc==='explorer'||c.calc==='explorer2'){
+    const def=c.calc==='explorer2'?'pearson':'manhattan';
+    return `<h3>Öneri gezgini <span class="tag">PDF veri seti</span></h3>
+    <p style="margin:0 0 12px;color:var(--muted);font-size:14.5px">Bir kullanıcı ve ölçü seç. Komşu listesi ve öneriler kitaptaki fonksiyonlarla aynı şekilde hesaplanır.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:end">
+      <div><label>Kullanıcı</label><select id="eu">${NAMES.map(n=>`<option ${n===(def==='pearson'?'Jordyn':'Hailey')?'selected':''}>${n}</option>`).join('')}</select></div>
+      <div><label>Ölçü</label><select id="em"><option value="manhattan" ${def==='manhattan'?'selected':''}>Manhattan</option><option value="euclid">Öklid</option><option value="pearson" ${def==='pearson'?'selected':''}>Pearson</option><option value="cosine">Kosinüs</option></select></div>
+      <div><label>k</label><select id="ek"><option>1</option><option>2</option><option>3</option></select></div>
+      <button class="btn" onclick="runExplorer()">Göster</button></div>
+    <div class="out" id="eout"></div>`;
+  }
+  return '';
+}
+function runPair(m){
+  const x=parseVec(document.getElementById('cx').value),y=parseVec(document.getElementById('cy').value);
+  const out=document.getElementById('cout');
+  if(x.length!==y.length){out.innerHTML='<div class="note">İki listenin uzunluğu aynı olmalı ('+x.length+' ve '+y.length+').</div>';return}
+  let rows='',res='',steps='';
+  if(m==='cosine'){
+    let dot=0,nx=0,ny=0;x.forEach((a,i)=>{a=a||0;const b=y[i]||0;dot+=a*b;nx+=a*a;ny+=b*b;rows+=`<tr><td class="n">${i+1}</td><td class="n">${f(a)}</td><td class="n">${f(b)}</td><td class="n">${f(a*b)}</td><td class="n">${f(a*a)}</td><td class="n">${f(b*b)}</td></tr>`});
+    const cs=dot/Math.sqrt(nx*ny);
+    out.innerHTML=`<table class="t"><tr><th class="n">#</th><th class="n">x</th><th class="n">y</th><th class="n">x·y</th><th class="n">x²</th><th class="n">y²</th></tr>${rows}</table>
+    <div class="step">x·y = ${f(dot)}   ‖x‖ = √${f(nx)} = ${f(Math.sqrt(nx))}   ‖y‖ = √${f(ny)} = ${f(Math.sqrt(ny))}
+cos = ${f(dot)} / (${f(Math.sqrt(nx))} × ${f(Math.sqrt(ny))})</div>Sonuç: <span class="pill">cos = ${f(cs,4)}</span>`;return;
+  }
+  if(m==='manhattanZero'){
+    let dz=0,dc=0,n=0;x.forEach((a,i)=>{const b=y[i];dz+=Math.abs((a||0)-(b||0));if(a&&b){dc+=Math.abs(a-b);n++}});
+    out.innerHTML=`<table class="t"><tr><th>Yorum</th><th class="n">Manhattan</th></tr><tr><td>0 = gerçek puan (sıfır atama)</td><td class="n">${f(dz)}</td></tr><tr><td>0 = puanlanmamış (sadece ${n} ortak öğe)</td><td class="n">${f(dc)}</td></tr><tr><td>Ortalama uzaklık (ortak öğelere böl)</td><td class="n">${n?f(dc/n):'—'}</td></tr></table>
+    <div class="note">Varsayılan değerler Jake ile Kelsey’ye ait: sıfır atamayla 32, ortak öğelerle sadece 1 çıkar.</div>`;return;
+  }
+  const px=[],py=[];x.forEach((a,i)=>{const b=y[i];const common=a!==null&&b!==null&&!isNaN(a)&&!isNaN(b);
+    rows+=`<tr${common?'':' style="color:#aaa"'}><td class="n">${i+1}</td><td class="n">${a===null?'–':f(a)}</td><td class="n">${b===null?'–':f(b)}</td><td class="n">${common?f(Math.abs(a-b)):''}</td><td class="n">${common?f((a-b)**2):''}</td></tr>`;
+    if(common){px.push(a);py.push(b)}});
+  const diffs=px.map((a,i)=>Math.abs(a-py[i]));
+  if(!px.length){out.innerHTML='<div class="note">Ortak öğe yok.</div>';return}
+  const tab=`<table class="t"><tr><th class="n">#</th><th class="n">x</th><th class="n">y</th><th class="n">|x−y|</th><th class="n">(x−y)²</th></tr>${rows}</table>`;
+  if(m==='manhattan'){res=`<div class="step">d = ${diffs.map(d=>f(d)).join(' + ')} = ${f(diffs.reduce((a,b)=>a+b,0))}</div>Sonuç: <span class="pill">Manhattan = ${f(diffs.reduce((a,b)=>a+b,0))}</span> · Öklid ile karşılaştır: ${f(Math.sqrt(diffs.reduce((a,b)=>a+b*b,0)))}`}
+  if(m==='euclid'){const ss=diffs.reduce((a,b)=>a+b*b,0);res=`<div class="step">d = √(${diffs.map(d=>f(d*d)).join(' + ')}) = √${f(ss)}</div>Sonuç: <span class="pill">Öklid = ${f(Math.sqrt(ss))}</span> · Manhattan ile karşılaştır: ${f(diffs.reduce((a,b)=>a+b,0))}`}
+  if(m==='minkowski'){const rs=document.getElementById('cr').value.trim().toLowerCase();const r=(rs==='inf'||rs==='∞')?Infinity:parseFloat(rs.replace(',','.'));
+    const mk=rr=>rr===Infinity?Math.max(...diffs):Math.pow(diffs.reduce((a,b)=>a+Math.pow(b,rr),0),1/rr);
+    res=`<table class="t"><tr><th>r</th><th class="n">Sonuç</th></tr><tr><td>1 (Manhattan)</td><td class="n">${f(mk(1))}</td></tr><tr><td>2 (Öklid)</td><td class="n">${f(mk(2))}</td></tr><tr class="hl"><td>${r===Infinity?'∞':f(r)} (seçtiğin)</td><td class="n">${isFinite(mk(r))?f(mk(r)):'—'}</td></tr><tr><td>∞ (Supremum)</td><td class="n">${f(mk(Infinity))}</td></tr></table>`}
+  if(m==='pearson'){const n=px.length,sx=px.reduce((a,b)=>a+b,0),sy=py.reduce((a,b)=>a+b,0),sxy=px.reduce((a,b,i)=>a+b*py[i],0),sx2=px.reduce((a,b)=>a+b*b,0),sy2=py.reduce((a,b)=>a+b*b,0);
+    const num=sxy-sx*sy/n,d1=Math.sqrt(sx2-sx*sx/n),d2=Math.sqrt(sy2-sy*sy/n),r=(d1*d2)?num/(d1*d2):0;
+    res=`<div class="step">n = ${n}   Σx = ${f(sx)}   Σy = ${f(sy)}   Σxy = ${f(sxy)}   Σx² = ${f(sx2)}   Σy² = ${f(sy2)}
+Pay   = ${f(sxy)} − ${f(sx)}×${f(sy)}/${n} = ${f(num)}
+Payda = √(${f(sx2)} − ${f(sx*sx/n)}) × √(${f(sy2)} − ${f(sy*sy/n)}) = ${f(d1)} × ${f(d2)} = ${f(d1*d2)}</div>${d1*d2?'':'<div class="note">Payda 0, kitaptaki fonksiyon bu durumda 0 döndürür.</div>'}Sonuç: <span class="pill">r = ${f(r,4)}</span>`;
+    out.innerHTML=res;return}
+  out.innerHTML=tab+res;
+}
+function runKnn(){
+  const lines=document.getElementById('kin').value.split('\n').map(l=>l.split(',').map(s=>s.trim())).filter(a=>a.length>=3);
+  const P=lines.map(a=>({n:a[0],p:parseFloat(a[1]),r:parseFloat(a[2])})).filter(o=>isFinite(o.p)&&isFinite(o.r));
+  const sum=P.reduce((a,b)=>a+b.p,0);let pred=0;
+  const rows=P.map(o=>{const w=o.p/sum;pred+=o.r*w;return `<tr><td>${o.n}</td><td class="n">${f(o.p)}</td><td class="n">${f(w*100,1)}%</td><td class="n">${f(o.r)}</td><td class="n">${f(o.r*w)}</td></tr>`}).join('');
+  document.getElementById('kout').innerHTML=`<table class="t"><tr><th>Kişi</th><th class="n">Pearson</th><th class="n">Etki</th><th class="n">Puan</th><th class="n">Puan×Etki</th></tr>${rows}<tr class="hl"><td>Toplam</td><td class="n">${f(sum)}</td><td class="n">100%</td><td></td><td class="n">${f(pred)}</td></tr></table>Tahmin: <span class="pill">${f(pred)}</span>`;
+}
+function runExplorer(){
+  const u=document.getElementById('eu').value,m=document.getElementById('em').value,k=+document.getElementById('ek').value;
+  const fn={manhattan:(a,b)=>minkowski(a,b,1),euclid:(a,b)=>minkowski(a,b,2),pearson,cosine}[m];
+  const sim=m==='pearson'||m==='cosine';
+  let list=NAMES.filter(n=>n!==u).map(n=>({n,d:fn(USERS[u],USERS[n])}));
+  list.sort((a,b)=>sim?(b.d-a.d)||(a.n<b.n?-1:1):(a.d-b.d)||(a.n<b.n?-1:1));
+  const near=list.slice(0,k);const tot=near.reduce((a,b)=>a+b.d,0);
+  const rec={};
+  if(k===1){const nb=USERS[near[0].n];for(const a in nb){if(!(a in USERS[u]))rec[a]=nb[a]}}
+  else{near.forEach(o=>{const w=sim?o.d/tot:(1/k);const nb=USERS[o.n];for(const a in nb){if(!(a in USERS[u]))rec[a]=(rec[a]||0)+nb[a]*w}})}
+  const recs=Object.entries(rec).sort((a,b)=>b[1]-a[1]);
+  document.getElementById('eout').innerHTML=`<div class="grid2"><div><b>${u} için ${sim?'benzerlik':'uzaklık'} sırası</b> <span class="src">(${sim?'büyükten küçüğe':'küçükten büyüğe'})</span>
+  <table class="t"><tr><th>Kişi</th><th class="n">${sim?'benzerlik':'uzaklık'}</th></tr>${list.map((o,i)=>`<tr class="${i<k?'hl':''}"><td>${o.n}</td><td class="n">${f(o.d)}</td></tr>`).join('')}</table></div>
+  <div><b>Öneriler</b> <span class="src">(k = ${k}${k>1?(sim?', Pearson/kosinüs ağırlıklı':', eşit ağırlık'):''})</span>
+  ${recs.length?`<table class="t"><tr><th>Grup</th><th class="n">skor</th></tr>${recs.map(r=>`<tr><td>${r[0]}</td><td class="n">${f(r[1])}</td></tr>`).join('')}</table>`:'<div class="note">Öneri yok: komşu(lar)ın puanladığı her grubu bu kullanıcı zaten puanlamış.</div>'}
+  ${k>1?'<div class="src">Not: k&gt;1’de komşunun puanlamadığı öğe o komşudan katkı almaz (kitaptaki sınıfla aynı).</div>':''}</div></div>
+  <details class="ex" style="margin-top:12px"><summary>Veri tablosunu göster</summary><div class="body">${ratingTable([u,...near.map(o=>o.n)])}</div></details>`;
+}
+
+/* ---------- yönlendirme ---------- */
+function go(id){if(location.hash!=='#'+id)location.hash=id;else render()}
+function render(){
+  const id=(location.hash||'#home').slice(1);const idx=CATS.findIndex(c=>c.id===id);
+  document.getElementById('nav').innerHTML=navHTML(idx<0?'home':id);
+  document.getElementById('main').innerHTML=idx<0?home():catHTML(CATS[idx],idx);
+  document.querySelector('nav').classList.remove('open');
+  updateTotals();window.scrollTo(0,0);
+  if(idx>=0){const c=CATS[idx];if(c.calc==='pair')runPair(c.calcMetric);if(c.calc==='knn')runKnn();if(c.calc.startsWith('explorer'))runExplorer()}
+}
+window.addEventListener('hashchange',render);
+render();
+</script>
+</body>
+</html>
